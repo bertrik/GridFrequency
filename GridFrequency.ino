@@ -31,7 +31,7 @@ static PubSubClient mqttClient(wifiClient);
 
 static int event_id = 0;
 
-static void show_help(const cmd_t * cmds)
+static void show_help(const cmd_t *cmds)
 {
     for (const cmd_t * cmd = cmds; cmd->cmd != NULL; cmd++) {
         printf("%10s: %s\r\n", cmd->name, cmd->help);
@@ -47,7 +47,7 @@ static int do_reboot(int argc, char *argv[])
 }
 
 const cmd_t commands[] = {
-    { "reboot", do_reboot, "Reboot"},
+    { "reboot", do_reboot, "Reboot" },
     { "help", do_help, "Show help" },
     { NULL, NULL, NULL }
 };
@@ -70,12 +70,11 @@ void setup(void)
     wm.autoConnect(esp_id);
 
     // set up web server
-    events.onConnect([](AsyncEventSourceClient *client){
-        printf("Client connected, last id: %d\n", client->lastId());
-    });
-    server.addHandler(&events);    
+    events.onConnect([](AsyncEventSourceClient * client) {
+                     printf("Client connected, last id: %d\n", client->lastId());});
+    server.addHandler(&events);
     server.begin();
-    
+
     MDNS.begin("gridfrequency");
     MDNS.addService("http", "tcp", 80);
 }
@@ -99,12 +98,9 @@ void loop(void)
         printf("Angle:%8.3f, dAngle:%7.3f, Freq:%7.3f, Ampl:%5.1f\n", angle, d, freq, ampl);
 
         char value[64];
-        sprintf(value, "{\"frequency\":%.3f,\"phase\":%.3f,\"amplitude\":%.1f}", freq, angle,
-                ampl);
+        sprintf(value, "{\"frequency\":%.3f,\"phase\":%.3f,\"amplitude\":%.1f}", freq, angle, ampl);
         events.send(value, "measurement", event_id++);
     }
-
     // command line processing
     shell.process(">", commands);
 }
-
