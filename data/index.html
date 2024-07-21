@@ -3,21 +3,47 @@
 
 <head>
     <title>Grid frequency</title>
+    <!-- see https://www.cssscript.com/customizable-gauge-canvas/ -->
+    <script src="gauge.min.js"></script>
 </head>
 
 <body>
     <div style="max-width: fit-content; margin-left: auto; margin-right: auto;">
-        Grid frequency
+        <canvas id="demo"></canvas>
         <div id="frequency">waiting...</div>
     </div>
 </body>
 
 <script type="module">
+    const opts = {
+        angle: 0.0,
+        staticLabels: {
+            font: "10px sans-serif",
+            labels: [49.80, 49.90, 50.00, 50.10, 50.20],
+            fractionDigits: 2
+        },
+        staticZones: [
+            { strokeStyle: "#FF0000", min: 49.75, max: 49.85 },
+            { strokeStyle: "#FFAA00", min: 49.80, max: 49.90 },
+            { strokeStyle: "#FFFF00", min: 49.90, max: 49.99 },
+            { strokeStyle: "#00FF00", min: 49.99, max: 50.01 },
+            { strokeStyle: "#FFFF00", min: 50.01, max: 50.10 },
+            { strokeStyle: "#FFAA00", min: 50.10, max: 50.20 },
+            { strokeStyle: "#FF0000", min: 50.20, max: 50.25 }
+        ]
+    };
+    const target = document.getElementById('demo');
+    var gauge = new Gauge(target).setOptions(opts);
+    gauge.set(50.0)
+    gauge.setMinValue(49.75);
+    gauge.maxValue = 50.25;
+
     const eventList = document.querySelector("ul");
     var eventSource = new EventSource("http://gridfrequency.local/events");
     eventSource.onmessage = function (e) {
         const obj = JSON.parse(e.data);
         document.getElementById("frequency").innerHTML = '<h1>' + obj.frequency.toPrecision(5) + " Hz</h1>"
+        gauge.set(obj.frequency)
     };
 </script>
 
