@@ -30,7 +30,9 @@
             { strokeStyle: "#FFFF00", min: 50.01, max: 50.10 },
             { strokeStyle: "#FFAA00", min: 50.10, max: 50.20 },
             { strokeStyle: "#FF0000", min: 50.20, max: 50.25 }
-        ]
+        ],
+        limitMin: true,
+        limitMax: true
     };
     const target = document.getElementById('demo');
     var gauge = new Gauge(target).setOptions(opts);
