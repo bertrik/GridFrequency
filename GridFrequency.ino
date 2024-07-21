@@ -57,22 +57,26 @@ static int do_help(int argc, char *argv[])
     return 0;
 }
 
+static void on_event_connect(AsyncEventSourceClient *client)
+{
+    IPAddress remoteIP = client->client()->remoteIP();
+    printf("Client connected: %s\n", remoteIP.toString().c_str());
+}
+
 void setup(void)
 {
-    pinMode(PIN_LED, OUTPUT);
-    measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
-
     Serial.begin(115200);
     Serial.println("\nESP32PHASE");
+
+    pinMode(PIN_LED, OUTPUT);
+    measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
 
     WiFiManager wm;
     wm.autoConnect(esp_id);
 
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-    events.onConnect([](AsyncEventSourceClient * client) {
-                     printf("Client connected, last id: %d\n", client->lastId());
-                     });
+    events.onConnect(on_event_connect);
     server.addHandler(&events);
     server.begin();
 
