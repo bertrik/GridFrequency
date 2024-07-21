@@ -40,7 +40,6 @@
     gauge.setMinValue(49.75);
     gauge.maxValue = 50.25;
 
-    const eventList = document.querySelector("ul");
     var eventSource = new EventSource("http://gridfrequency.local/events");
     eventSource.onmessage = function (e) {
         const obj = JSON.parse(e.data);
