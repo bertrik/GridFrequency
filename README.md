@@ -2,7 +2,8 @@
 Arduino project to measure mains/grid frequency and publish it as SSE and MQTT streams with display on an internal web server
 
 ## Introduction
-This Arduino software allows you to measure the mains grid frequency (nominally 50 Hz) to high resolution (1 mHz) and display the frequency on a web page served from an internal web server.
+This Arduino software allows you to measure the mains grid frequency (nominally 50 Hz) to high resolution (1 mHz)
+and display the frequency on a web page served from an internal web server.
 
 ### Future
 Plans for the future are:
@@ -11,11 +12,18 @@ Plans for the future are:
 * display not just instantaneous frequency but also little graphs over time
 
 ## Design
-This project is the result of various iterations of trying to build a simple device to measure mains frequency. So far this is the simplest hardware design, coupled with the most accurate software algorithm.
+This project is the result of various iterations of trying to build a simple device to measure mains frequency.
+So far this is the simplest hardware design, coupled with the most accurate software algorithm.
 
-The algorithm samples a floating ADC input during 1 second, picking up the ambient mains 'hum'. While sampling, the measured waveform is correlated with a 'perfect' reference 50 Hz quadrature waveform. This gives an I and Q value from which the relative phase between the measured waveform and the reference waveform can be determined. Small frequency deviations in the actual mains waveform cause this phase to shift over time. From this shift, the instantaneous frequency of the measured waveform is derived each second.
+The algorithm samples a floating ADC input during 1 second, picking up the ambient mains 'hum'.
+While sampling, the measured waveform is correlated with a 'perfect' reference 50 Hz quadrature waveform.
+This gives an I and Q value from which the relative phase between the measured waveform and the reference waveform can be determined.
+Small frequency deviations in the actual mains waveform cause this phase to shift over time.
+From this shift, the instantaneous frequency of the measured waveform is derived each second.
 
-The measured frequency values are published on /events as server-sent events (SSE). The internal web server serves a web page with javascript that connects an event source to this SSE stream. The instantaneous value is visualized as a gauge using [gauge.js](https://github.com/bernii/gauge.js) by Bernard Kobos.
+The measured frequency values are published on /events as server-sent events (SSE).
+The internal web server serves a web page with javascript that connects an event source to this SSE stream.
+The instantaneous value is visualized as a gauge using [gauge.js](https://github.com/bernii/gauge.js) by Bernard Kobos.
 
 ## Hardware
 The hardware consists of a Luatos ESP32-C3 board:
@@ -75,7 +83,9 @@ pio run -t uploadfs
 ```
 
 ### Running
-When running for the first time, no WiFi connection has been set up. The sofware will create its own WiFi access point. Connect to this (no password) and browse to http://192.168.4.1 to choose a network to connect to, enter the WiFi password and press save. The board should reboot and automatically connect to your WiFi from now on.
+When running for the first time, no WiFi connection has been set up. The sofware will create its own WiFi access point.
+Connect to this (no password) and browse to http://192.168.4.1 to choose a network to connect to,
+enter the WiFi password and press save. The board should reboot and automatically connect to your WiFi from now on.
 
 When it has successfully connected to the WiFi network, the LED starts flashing slowy, 1 second on, 1 second off.
 
