@@ -13,9 +13,9 @@ Plans for the future are:
 ## Design
 This project is the result of various iterations of trying to build a simple device to measure mains frequency. So far this is the simplest hardware design, coupled with the most accurate software algorithm.
 
-The algorithm samples a floating ADC input during 1 second, picking up the ambient mains 'hum'. While sampling, the measured waveform is correlated with a 'perfect' reference 50 Hz quadrature waveform. This gives an I and Q value from which the relative phase between the measured waveform and the reference waveform can be determined. Small frequency deviations in the actual mains waveform causes this phase to shift over time. From this shift, the instantaneous frequency of the measured waveform is derived each second.
+The algorithm samples a floating ADC input during 1 second, picking up the ambient mains 'hum'. While sampling, the measured waveform is correlated with a 'perfect' reference 50 Hz quadrature waveform. This gives an I and Q value from which the relative phase between the measured waveform and the reference waveform can be determined. Small frequency deviations in the actual mains waveform cause this phase to shift over time. From this shift, the instantaneous frequency of the measured waveform is derived each second.
 
-The measured frequency values are published on /events as server-sent events (SSE). The internal web server serves a web page with javascript that connects an event source to this SSE stream. The instantaneous value is visualized as a gauge using [gauge.js](https://github.com/bernii/gauge) by Bernard Kobos. 
+The measured frequency values are published on /events as server-sent events (SSE). The internal web server serves a web page with javascript that connects an event source to this SSE stream. The instantaneous value is visualized as a gauge using [gauge.js](https://github.com/bernii/gauge.js) by Bernard Kobos.
 
 ## Hardware
 The hardware consists of a Luatos ESP32-C3 board:
