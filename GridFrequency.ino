@@ -12,7 +12,8 @@
 
 #define BASE_FREQUENCY      50.0
 #define PIN_50HZ_INPUT      0
-#define PIN_LED             12
+#define PIN_LED_D4          12
+#define PIN_LED_D5          13
 
 #define MQTT_HOST   "stofradar.nl"
 #define MQTT_PORT   1883
@@ -68,7 +69,11 @@ void setup(void)
     Serial.begin(115200);
     Serial.println("\nESP32PHASE");
 
-    pinMode(PIN_LED, OUTPUT);
+    pinMode(PIN_LED_D4, OUTPUT);
+    digitalWrite(PIN_LED_D4, 0);
+    pinMode(PIN_LED_D5, OUTPUT);
+    digitalWrite(PIN_LED_D5, 0);
+
     measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
 
     WiFiManager wm;
@@ -93,7 +98,7 @@ void loop(void)
     static double prev_phase = 0.0;
     double phase, ampl;
     if (measure_loop(phase, ampl)) {
-        digitalWrite(PIN_LED, !digitalRead(PIN_LED));
+        digitalWrite(PIN_LED_D4, !digitalRead(PIN_LED_D4));
 
         double delta = phase - prev_phase;
         if (delta < -180.0) {
