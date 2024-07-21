@@ -13,7 +13,6 @@
 #define BASE_FREQUENCY      50.0
 #define PIN_50HZ_INPUT      0
 #define PIN_LED             12
-#define SAMPLE_FREQUENCY    5000
 
 #define MQTT_HOST   "stofradar.nl"
 #define MQTT_PORT   1883
@@ -70,8 +69,10 @@ void setup(void)
     wm.autoConnect(esp_id);
 
     // set up web server
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     events.onConnect([](AsyncEventSourceClient * client) {
-                     printf("Client connected, last id: %d\n", client->lastId());});
+                     printf("Client connected, last id: %d\n", client->lastId());
+                     });
     server.addHandler(&events);
     server.begin();
 
@@ -82,24 +83,26 @@ void setup(void)
 void loop(void)
 {
     // run the frequency algorithm continuously
-    static double prev_angle = 0.0;
-    double angle, ampl;
-    if (measure_loop(angle, ampl)) {
-        double d = angle - prev_angle;
-        if (d < -180.0) {
-            d += 360.0;
-        } else if (d > 180.0) {
-            d -= 360.0;
-        }
-        double t = 1.0 - (d / 360.0) / BASE_FREQUENCY;
-        double freq = BASE_FREQUENCY / t;
-        prev_angle = angle;
+    static double prev_phase = 0.0;
+    double phase, ampl;
+    if (measure_loop(phase, ampl)) {
+        digitalWrite(PIN_LED, !digitalRead(PIN_LED));
 
-        printf("Angle:%8.3f, dAngle:%7.3f, Freq:%7.3f, Ampl:%5.1f\n", angle, d, freq, ampl);
+        double delta = phase - prev_phase;
+        if (delta < -180.0) {
+            delta += 360.0;
+        } else if (delta > 180.0) {
+            delta -= 360.0;
+        }
+        double t = 1.0 - (delta / 360.0) / BASE_FREQUENCY;
+        double freq = BASE_FREQUENCY / t;
+        prev_phase = phase;
+
+        printf("Phase:%8.3f, Delta:%8.3f, Ampl:%6.1f, Freq:%7.3f\n", phase, delta, ampl, freq);
 
         char value[64];
-        sprintf(value, "{\"frequency\":%.3f,\"phase\":%.3f,\"amplitude\":%.1f}", freq, angle, ampl);
-        events.send(value, "measurement", event_id++);
+        sprintf(value, "{\"phase\":%.1f,\"amplitude\":%.1f,\"frequency\":%.3f}", phase, ampl, freq);
+        events.send(value, NULL, event_id++);
     }
     // command line processing
     shell.process(">", commands);
