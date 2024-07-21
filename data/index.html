@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Grid frequency</title>
+</head>
+
+<body>
+    <div style="max-width: fit-content; margin-left: auto; margin-right: auto;">
+        Grid frequency
+        <div id="frequency">waiting...</div>
+    </div>
+</body>
+
+<script type="module">
+    const eventList = document.querySelector("ul");
+    var eventSource = new EventSource("http://gridfrequency.local/events");
+    eventSource.onmessage = function (e) {
+        const obj = JSON.parse(e.data);
+        document.getElementById("frequency").innerHTML = '<h1>' + obj.frequency.toPrecision(5) + " Hz</h1>"
+    };
+</script>
+
+</html>

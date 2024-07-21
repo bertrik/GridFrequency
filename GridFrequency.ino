@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <ESPmDNS.h>
-
+#include <SPIFFS.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 #include <MiniShell.h>
@@ -77,11 +77,14 @@ void setup(void)
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     events.onConnect(on_event_connect);
+
+    SPIFFS.begin();
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.addHandler(&events);
     server.begin();
 
-    MDNS.begin("gridfrequency");
     MDNS.addService("http", "tcp", 80);
+    MDNS.begin("gridfrequency");
 }
 
 void loop(void)
