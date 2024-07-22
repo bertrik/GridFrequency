@@ -88,8 +88,8 @@ void setup(void)
     server.addHandler(&events);
     server.begin();
 
-    MDNS.addService("http", "tcp", 80);
     MDNS.begin("gridfrequency");
+    MDNS.addService("_http", "_tcp", 80);
 }
 
 void loop(void)
