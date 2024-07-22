@@ -25,7 +25,7 @@ From this shift, the instantaneous frequency of the measured waveform is derived
 
 The measured frequency values are published on /events as server-sent events (SSE).
 The internal web server serves a web page with javascript that connects an event source to this SSE stream.
-The instantaneous value is visualized as a gauge using [gauge.js](https://github.com/bernii/gauge.js) by Bernard Kobos.
+The instantaneous value is visualized as a gauge using [canvas-gauges](https://canvas-gauges.com) by Mykhailo Stadnyk.
 
 ## Hardware
 The hardware consists of a Luatos ESP32-C3 board:
