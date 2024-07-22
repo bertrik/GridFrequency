@@ -5,6 +5,8 @@ Arduino project to measure mains/grid frequency and publish it as SSE and MQTT s
 This Arduino software allows you to measure the mains grid frequency (nominally 50 Hz) to high resolution (1 mHz)
 and display the frequency on a web page served from an internal web server.
 
+![example](images/example.png)
+
 ### Future
 Plans for the future are:
 * add support for sending measurements over MQTT
@@ -90,7 +92,3 @@ enter the WiFi password and press save. The board should reboot and automaticall
 When it has successfully connected to the WiFi network, the LED starts flashing slowy, 1 second on, 1 second off.
 
 You can view frequency measurements by browsing to http://gridfrequency.local
-
-You should now see something like this:
-
-![example](images/example.png)
