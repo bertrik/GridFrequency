@@ -40,7 +40,7 @@
     gauge.setMinValue(49.75);
     gauge.maxValue = 50.25;
 
-    var eventSource = new EventSource("http://gridfrequency.local/events");
+    var eventSource = new EventSource("/events");
     eventSource.onmessage = function (e) {
         const obj = JSON.parse(e.data);
         document.getElementById("frequency").innerHTML = '<h1>' + obj.frequency.toPrecision(5) + " Hz</h1>"
