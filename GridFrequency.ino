@@ -1,10 +1,12 @@
 #include <Arduino.h>
 #include <ESPmDNS.h>
 #include <SPIFFS.h>
+
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 #include <MiniShell.h>
-#include "AsyncEventSource.h"
+#include <AsyncEventSource.h>
+#include <ArduinoJson.h>
 
 #include "measure.h"
 
@@ -28,6 +30,8 @@ static AsyncEventSource events("/events");
 static MiniShell shell(&Serial);
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
+
+static StaticJsonDocument < 1024 > jsonDoc;
 
 static int event_id = 0;
 
@@ -64,6 +68,58 @@ static void on_event_connect(AsyncEventSourceClient *client)
     printf("Client connected: %s\n", remoteIP.toString().c_str());
 }
 
+static String template_processor(const String & string)
+{
+    // replace according to pattern"propName:propValue?replacement"
+    int i = string.indexOf("?");
+    if (i >= 0) {
+        String property = string.substring(0, i);
+        i = property.indexOf(":");
+        if (i >= 0) {
+            // split property in name and matching value
+            String propName = property.substring(0, i);
+            String propValue = property.substring(i + 1);
+            String actual = jsonDoc[propName] | "";
+            if (actual == propValue) {
+                return string.substring(i + 1);
+            }
+        }
+    }
+
+    // try regular match
+    return jsonDoc[string] | "";
+}
+
+static void handleGetConfig(AsyncWebServerRequest *request)
+{
+    // read the config file in preparation of presentation in the web UI
+    File configFile = SPIFFS.open("/config.json", "r");
+    deserializeJson(jsonDoc, configFile);
+    configFile.close();
+
+    // serve the config page from flash
+    request->send(SPIFFS, "/config.html", "text/html", false, template_processor);
+}
+
+static void handlePostConfig(AsyncWebServerRequest *request)
+{
+    // put all parameters in the JSON document
+    for (size_t i = 0; i < request->params(); i++) {
+        AsyncWebParameter *param = request->getParam(i);
+        String name = param->name();
+        String value = param->value();
+        jsonDoc[name] = value;
+    }
+
+    // write the config file
+    File configFile = SPIFFS.open("/config.json", "w");
+    serializeJson(jsonDoc, configFile);
+    configFile.close();
+
+    // redirect to page with values
+    request->redirect("/config");
+}
+
 void setup(void)
 {
     Serial.begin(115200);
@@ -86,6 +142,8 @@ void setup(void)
     SPIFFS.begin();
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.addHandler(&events);
+    server.on("/config", HTTP_GET, handleGetConfig);
+    server.on("/config", HTTP_POST, handlePostConfig);
     server.begin();
 
     MDNS.begin("gridfrequency");

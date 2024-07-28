@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Configuration</title>
+    <link rel="stylesheet" href="classless.css">
+</head>
+
+<body>
+    <form action="/config" method="post">
+        <fieldset>
+            <legend>MQTT settings</legend>
+            <div class="row">
+                <label class="col">Broker host
+                    <input type="text" name="mqtt_broker_host" value="%mqtt_broker_host%" required>
+                </label>
+                <label class="col-4">port
+                    <input type="number" name="mqtt_broker_port" value="%mqtt_broker_port%" required>
+                </label>
+            </div>
+            <div class="row">
+                <label class="col">Client user name
+                    <input type="text" name="mqtt_user" value="%mqtt_user%">
+                </label>
+                <label class="col">password
+                    <input type="password" name="mqtt_pass" value="%mqtt_pass%">
+                </label>
+            </div>
+            <div class="row">
+                <label class="col">Topic
+                    <input type="text" name="mqtt_topic" value="%mqtt_topic%" required>
+                </label>
+            </div>
+            <div class="row">
+                <label class="col-4">Options
+                    <select name="mqtt_retained">
+                        <option value="true" %mqtt_retained:true?selected%>Retained</option>
+                        <option value="false" %mqtt_retained:false?selected%>Non-retained</option>
+                    </select>
+                </label>
+            </div>
+        </fieldset>
+        <button type="submit">Save</button>
+    </form>
+</body>
+
+</html>
