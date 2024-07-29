@@ -70,10 +70,11 @@ static void on_event_connect(AsyncEventSourceClient *client)
 
 static String template_processor(const String & string)
 {
-    // replace according to pattern"propName:propValue?replacement"
+    // replace according to pattern "propName:propValue?replacement"
     int i = string.indexOf("?");
     if (i >= 0) {
         String property = string.substring(0, i);
+        String replacement = string.substring(i + 1);
         i = property.indexOf(":");
         if (i >= 0) {
             // split property in name and matching value
@@ -81,7 +82,7 @@ static String template_processor(const String & string)
             String propValue = property.substring(i + 1);
             String actual = jsonDoc[propName] | "";
             if (actual == propValue) {
-                return string.substring(i + 1);
+                return replacement;
             }
         }
     }
