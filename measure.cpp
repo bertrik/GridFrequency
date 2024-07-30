@@ -24,7 +24,7 @@ static void IRAM_ATTR adc_int(void)
     uint16_t latest_reading = analogRead(_pin);
     uint32_t next = (bufw + 1) % BUF_SIZE;
     if (next != bufr) {
-        latest_reading = buffer[bufw] = latest_reading;
+        buffer[bufw] = latest_reading;
         bufw = next;
     }
 }
