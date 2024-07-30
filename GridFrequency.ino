@@ -17,12 +17,13 @@
 #define PIN_LED_D4          12
 #define PIN_LED_D5          13
 
+#define HOST_NAME   "gridfrequency"
+
 #define MQTT_HOST   "stofradar.nl"
 #define MQTT_PORT   1883
 #define MQTT_TOPIC  "bertrik/mains"
 
 static char line[120];
-static char esp_id[] = "esp32-50hz";
 
 static AsyncWebServer server(80);
 static AsyncEventSource events("/events");
@@ -124,7 +125,7 @@ static void handlePostConfig(AsyncWebServerRequest *request)
 void setup(void)
 {
     Serial.begin(115200);
-    Serial.println("\nESP32PHASE");
+    Serial.println("\ngridfrequency");
 
     pinMode(PIN_LED_D4, OUTPUT);
     digitalWrite(PIN_LED_D4, 0);
@@ -133,8 +134,9 @@ void setup(void)
 
     measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
 
+    WiFi.setHostname(HOST_NAME);
     WiFiManager wm;
-    wm.autoConnect(esp_id);
+    wm.autoConnect(HOST_NAME);
 
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
@@ -147,7 +149,7 @@ void setup(void)
     server.on("/config", HTTP_POST, handlePostConfig);
     server.begin();
 
-    MDNS.begin("gridfrequency");
+    MDNS.begin(HOST_NAME);
     MDNS.addService("_http", "_tcp", 80);
 }
 
