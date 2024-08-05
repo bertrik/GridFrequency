@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <form action="/config" method="post">
+    <form action="/config" method="post" id="config">
         <fieldset>
             <legend>MQTT settings</legend>
             <div class="row">
@@ -23,7 +23,7 @@
                     <input type="text" name="mqtt_user" value="%mqtt_user%">
                 </label>
                 <label class="col">password
-                    <input type="password" name="mqtt_pass" value="%mqtt_pass%">
+                    <input type="text" name="mqtt_pass" value="%mqtt_pass%">
                 </label>
             </div>
             <div class="row">
@@ -40,8 +40,16 @@
                 </label>
             </div>
         </fieldset>
-        <button type="submit">Save</button>
+        <button type="submit" id="submit">Save</button>
     </form>
 </body>
+
+<script type="module">
+    // disable submit button on POST, it will be re-enabled on the reload
+    document.getElementById("config").addEventListener("submit", function (e) {
+        document.getElementById("submit").disabled = true
+    })
+</script>
+
 
 </html>
