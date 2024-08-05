@@ -9,6 +9,7 @@
 #include <ArduinoJson.h>
 
 #include "measure.h"
+#include "config.h"
 
 #define printf Serial.printf
 
@@ -19,10 +20,6 @@
 
 #define HOST_NAME   "gridfrequency"
 
-#define MQTT_HOST   "stofradar.nl"
-#define MQTT_PORT   1883
-#define MQTT_TOPIC  "bertrik/mains"
-
 static char line[120];
 
 static AsyncWebServer server(80);
@@ -31,8 +28,6 @@ static AsyncEventSource events("/events");
 static MiniShell shell(&Serial);
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
-
-static StaticJsonDocument < 1024 > jsonDoc;
 
 static int event_id = 0;
 
@@ -69,88 +64,50 @@ static void on_event_connect(AsyncEventSourceClient *client)
     printf("Client connected: %s\n", remoteIP.toString().c_str());
 }
 
-static String template_processor(const String & string)
-{
-    // replace according to pattern "propName:propValue?replacement"
-    int i = string.indexOf("?");
-    if (i >= 0) {
-        String property = string.substring(0, i);
-        String replacement = string.substring(i + 1);
-        i = property.indexOf(":");
-        if (i >= 0) {
-            // split property in name and matching value
-            String propName = property.substring(0, i);
-            String propValue = property.substring(i + 1);
-            String actual = jsonDoc[propName] | "";
-            if (actual == propValue) {
-                return replacement;
-            }
-        }
-    }
-
-    // try regular match
-    return jsonDoc[string] | "";
-}
-
-static void handleGetConfig(AsyncWebServerRequest *request)
-{
-    // read the config file in preparation of presentation in the web UI
-    File configFile = SPIFFS.open("/config.json", "r");
-    deserializeJson(jsonDoc, configFile);
-    configFile.close();
-
-    // serve the config page from flash
-    request->send(SPIFFS, "/config.html", "text/html", false, template_processor);
-}
-
-static void handlePostConfig(AsyncWebServerRequest *request)
-{
-    // put all parameters in the JSON document
-    for (size_t i = 0; i < request->params(); i++) {
-        AsyncWebParameter *param = request->getParam(i);
-        String name = param->name();
-        String value = param->value();
-        jsonDoc[name] = value;
-    }
-
-    // write the config file
-    File configFile = SPIFFS.open("/config.json", "w");
-    serializeJson(jsonDoc, configFile);
-    configFile.close();
-
-    // redirect to page with values
-    request->redirect("/config");
-}
-
 void setup(void)
 {
-    Serial.begin(115200);
-    Serial.println("\ngridfrequency");
-
+    // init low-level
     pinMode(PIN_LED_D4, OUTPUT);
     digitalWrite(PIN_LED_D4, 0);
     pinMode(PIN_LED_D5, OUTPUT);
     digitalWrite(PIN_LED_D5, 0);
 
-    measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
+    // init serial output
+    Serial.begin(115200);
+    Serial.println("\ngridfrequency");
 
+    // connect to WiFi
     WiFi.setHostname(HOST_NAME);
     WiFiManager wm;
     wm.autoConnect(HOST_NAME);
 
+    // load settings, save defaults if necessary
+    SPIFFS.begin();
+    config_begin(SPIFFS, "/config.json");
+    if (!config_load()) {
+        config_set_value("mqtt_broker_host", "mosquitto");
+        config_set_value("mqtt_broker_port", "1883");
+        config_set_value("mqtt_user", "");
+        config_set_value("mqtt_pass", "");
+        config_set_value("mqtt_topic", "");
+        config_set_value("mqtt_retained", "true");
+        config_save();
+    }
+
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     events.onConnect(on_event_connect);
-
-    SPIFFS.begin();
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.addHandler(&events);
-    server.on("/config", HTTP_GET, handleGetConfig);
-    server.on("/config", HTTP_POST, handlePostConfig);
+
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    config_serve(server, "/config", "/config.html");
     server.begin();
 
     MDNS.begin(HOST_NAME);
     MDNS.addService("_http", "_tcp", 80);
+
+    measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
+    measure_start();
 }
 
 void loop(void)
