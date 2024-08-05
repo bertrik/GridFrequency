@@ -37,9 +37,6 @@ void measure_init(int pin, double base_frequency)
     adcAttachPin(pin);
 
     timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &adc_int, true);
-    timerAlarmWrite(timer, 1000000 / SAMPLE_FREQUENCY, true);   // 5kHz timer
-    timerAlarmEnable(timer);
 
     bufr = 0;
     bufw = 0;
@@ -47,6 +44,13 @@ void measure_init(int pin, double base_frequency)
     
     _pin = pin;
     _base_frequency = base_frequency;
+}
+
+void measure_start(void)
+{
+    timerAttachInterrupt(timer, &adc_int, true);
+    timerAlarmWrite(timer, 1000000 / SAMPLE_FREQUENCY, true);   // 5kHz timer
+    timerAlarmEnable(timer);
 }
 
 static bool measure_get(uint16_t &val)
