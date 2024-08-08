@@ -1,0 +1,2 @@
+sseclient==0.0.27
+paho-mqtt==1.6.1
