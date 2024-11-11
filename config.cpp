@@ -8,6 +8,7 @@ static StaticJsonDocument < 1024 > _jsonDoc;
 static String _config_name;
 static String _config_path;
 static String _config_page;
+static int _version = 0;
 
 static String template_processor(const String & string)
 {
@@ -86,6 +87,7 @@ bool config_save(void)
     File file = _fs->open(_config_name, "w");
     size_t size = serializeJson(_jsonDoc, file);
     file.close();
+    _version++;
     return size > 0;
 }
 
@@ -98,3 +100,9 @@ String config_get_value(String propName)
 {
     return _jsonDoc[propName] | "";
 }
+
+int config_get_version(void)
+{
+    return _version;
+}
+

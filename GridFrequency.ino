@@ -21,6 +21,7 @@
 #define HOST_NAME   "gridfrequency"
 
 static char line[120];
+static char esp_id[64];
 
 static AsyncWebServer server(80);
 static AsyncEventSource events("/events");
@@ -28,6 +29,16 @@ static AsyncEventSource events("/events");
 static MiniShell shell(&Serial);
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
+
+static struct {
+    char host[64];
+    uint16_t port;
+    char user[32];
+    char pass[32];
+    char topic[64];
+    bool retained;
+    bool append_unit;
+} mqtt_config;
 
 static int event_id = 0;
 
@@ -76,6 +87,11 @@ void setup(void)
     Serial.begin(115200);
     Serial.println("\ngridfrequency");
 
+    // esp id
+    uint32_t chipId = ESP.getEfuseMac() & 0xFFFFFFFFL;
+    snprintf(esp_id, sizeof(esp_id), "esp32-%08X", chipId);
+    strcpy(esp_id, "esp32");
+
     // connect to WiFi
     WiFi.setHostname(HOST_NAME);
     WiFiManager wm;
@@ -85,11 +101,12 @@ void setup(void)
     SPIFFS.begin();
     config_begin(SPIFFS, "/config.json");
     if (!config_load()) {
-        config_set_value("mqtt_broker_host", "mosquitto");
+        config_set_value("mqtt_broker_host", "");
         config_set_value("mqtt_broker_port", "1883");
         config_set_value("mqtt_user", "");
         config_set_value("mqtt_pass", "");
         config_set_value("mqtt_topic", "");
+        config_set_value("mqtt_append_unit", "true");
         config_set_value("mqtt_retained", "true");
         config_save();
     }
@@ -110,8 +127,42 @@ void setup(void)
     measure_start();
 }
 
+static void check_mqtt(void)
+{
+    static int last_version = -1;
+
+    int version = config_get_version();
+    if (version != last_version) {
+        printf("Found new config version %d, reloading...\n", version);
+        last_version = version;
+
+        // update config struct
+        strlcpy(mqtt_config.host, config_get_value("mqtt_broker_host").c_str(), sizeof(mqtt_config.host));
+        mqtt_config.port = atoi(config_get_value("mqtt_broker_port").c_str());
+        strlcpy(mqtt_config.user, config_get_value("mqtt_user").c_str(), sizeof(mqtt_config.user));
+        strlcpy(mqtt_config.pass, config_get_value("mqtt_pass").c_str(), sizeof(mqtt_config.pass));
+        strlcpy(mqtt_config.topic, config_get_value("mqtt_topic").c_str(), sizeof(mqtt_config.topic));
+        mqtt_config.append_unit = config_get_value("mqtt_append_unit").equals("true");
+        mqtt_config.retained = config_get_value("mqtt_retained").equals("true");
+
+        // trigger re-connect
+        if (mqttClient.connected()) {
+            mqttClient.disconnect();
+            printf("Disconnected MQTT\n");
+        }
+    } else if ((WiFi.status() == WL_CONNECTED) && *mqtt_config.host && !mqttClient.connected()) {
+        mqttClient.setServer(mqtt_config.host, mqtt_config.port);
+        printf("Connecting MQTT %s:%u for topic %s...", mqtt_config.host, mqtt_config.port, mqtt_config.topic);
+        bool ok = mqttClient.connect(esp_id, mqtt_config.user, mqtt_config.pass, mqtt_config.topic, 0, mqtt_config.retained, "offline");
+        printf("%s\n", ok ? "OK" : "FAIL");
+    }
+}
+
 void loop(void)
 {
+    // attempt to connect MQTT if appropriate
+    check_mqtt();
+
     // run the frequency algorithm continuously
     static double prev_phase = 0.0;
     double phase, ampl;
@@ -130,10 +181,20 @@ void loop(void)
 
         printf("Phase:%8.3f, Delta:%8.3f, Ampl:%6.1f, Freq:%7.3f\n", phase, delta, ampl, freq);
 
+        // send over MQTT
         char value[64];
+        if (mqttClient.connected()) {
+            sprintf(value, "%.3f%s", freq, mqtt_config.append_unit ? " Hz" : "");
+            mqttClient.publish(mqtt_config.topic, value, mqtt_config.retained);
+        }
+
+        // send over SSE
         sprintf(value, "{\"phase\":%.1f,\"amplitude\":%.1f,\"frequency\":%.3f}", phase, ampl, freq);
         events.send(value, NULL, event_id++);
     }
     // command line processing
     shell.process(">", commands);
+
+    // process mqtt events
+    mqttClient.loop();
 }

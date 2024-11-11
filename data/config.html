@@ -11,11 +11,11 @@
         <fieldset>
             <legend>MQTT settings</legend>
             <div class="row">
-                <label class="col">Broker host
-                    <input type="text" name="mqtt_broker_host" value="%mqtt_broker_host%" required>
+                <label class="col">Broker host (leave empty to disable)
+                    <input type="text" name="mqtt_broker_host" value="%mqtt_broker_host%">
                 </label>
-                <label class="col-4">port
-                    <input type="number" name="mqtt_broker_port" value="%mqtt_broker_port%" required>
+                <label class="col-3">port
+                    <input type="number" name="mqtt_broker_port" min="0" value="%mqtt_broker_port%" required>
                 </label>
             </div>
             <div class="row">
@@ -29,6 +29,12 @@
             <div class="row">
                 <label class="col">Topic
                     <input type="text" name="mqtt_topic" value="%mqtt_topic%" required>
+                </label>
+                <label class="col-3">Append unit (Hz)
+                    <select name="mqtt_append_unit">
+                        <option value="true" %mqtt_append_unit:true?selected%>Yes</option>
+                        <option value="false" %mqtt_append_unit:false?selected%>No</option>
+                    </select>
                 </label>
             </div>
             <div class="row">
