@@ -90,7 +90,6 @@ void setup(void)
     // esp id
     uint32_t chipId = ESP.getEfuseMac() & 0xFFFFFFFFL;
     snprintf(esp_id, sizeof(esp_id), "esp32-%08X", chipId);
-    strcpy(esp_id, "esp32");
 
     // connect to WiFi
     WiFi.setHostname(HOST_NAME);
