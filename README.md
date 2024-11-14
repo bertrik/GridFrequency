@@ -92,3 +92,13 @@ enter the WiFi password and press save. The board should reboot and automaticall
 When it has successfully connected to the WiFi network, the LED starts flashing slowy, 1 second on, 1 second off.
 
 You can view frequency measurements by browsing to http://gridfrequency.local
+
+#### MQTT configuration
+Measurements can also be sent to an MQTT server.
+To configure MQTT, browse to http://gridfrequency.local/config
+
+![example](images/mqtt-config.png)
+
+Entering a broker host enables sending to MQTT, leaving it empty disables it.
+User name and password can be left empty, the topic is mandatory.
+With the 'append unit' option, measurements are published as '50.000 Hz', otherwise just a number like '50.000'.
