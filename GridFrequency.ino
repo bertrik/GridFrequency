@@ -36,8 +36,8 @@ static struct {
     char user[32];
     char pass[32];
     char topic[64];
+    char format[16];
     bool retained;
-    bool append_unit;
 } mqtt_config;
 
 static int event_id = 0;
@@ -105,7 +105,7 @@ void setup(void)
         config_set_value("mqtt_user", "");
         config_set_value("mqtt_pass", "");
         config_set_value("mqtt_topic", "");
-        config_set_value("mqtt_append_unit", "true");
+        config_set_value("mqtt_format", "json");
         config_set_value("mqtt_retained", "true");
         config_save();
     }
@@ -141,7 +141,7 @@ static void check_mqtt(void)
         strlcpy(mqtt_config.user, config_get_value("mqtt_user").c_str(), sizeof(mqtt_config.user));
         strlcpy(mqtt_config.pass, config_get_value("mqtt_pass").c_str(), sizeof(mqtt_config.pass));
         strlcpy(mqtt_config.topic, config_get_value("mqtt_topic").c_str(), sizeof(mqtt_config.topic));
-        mqtt_config.append_unit = config_get_value("mqtt_append_unit").equals("true");
+        strlcpy(mqtt_config.format, config_get_value("mqtt_format").c_str(), sizeof(mqtt_config.format));
         mqtt_config.retained = config_get_value("mqtt_retained").equals("true");
 
         // trigger re-connect
@@ -180,16 +180,20 @@ void loop(void)
 
         printf("Phase:%8.3f, Delta:%8.3f, Ampl:%6.1f, Freq:%7.3f\n", phase, delta, ampl, freq);
 
-        // send over MQTT
-        char value[64];
-        if (mqttClient.connected()) {
-            sprintf(value, "%.3f%s", freq, mqtt_config.append_unit ? " Hz" : "");
-            mqttClient.publish(mqtt_config.topic, value, mqtt_config.retained);
-        }
-
         // send over SSE
+        char value[64];
         sprintf(value, "{\"phase\":%.1f,\"amplitude\":%.1f,\"frequency\":%.3f}", phase, ampl, freq);
         events.send(value, NULL, event_id++);
+
+        // send over MQTT
+        if (mqttClient.connected()) {
+            if (strcmp("value", mqtt_config.format) == 0) {
+                sprintf(value, "%.3f", freq);
+            } else if (strcmp("value_unit", mqtt_config.format) == 0) {
+                sprintf(value, "%.3f Hz", freq);
+            }
+            mqttClient.publish(mqtt_config.topic, value, mqtt_config.retained);
+        }
     }
     // command line processing
     shell.process(">", commands);

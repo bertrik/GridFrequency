@@ -30,10 +30,11 @@
                 <label class="col">Topic
                     <input type="text" name="mqtt_topic" value="%mqtt_topic%" required>
                 </label>
-                <label class="col-3">Append unit (Hz)
-                    <select name="mqtt_append_unit">
-                        <option value="true" %mqtt_append_unit:true?selected%>Yes</option>
-                        <option value="false" %mqtt_append_unit:false?selected%>No</option>
+                <label class="col-4">Payload format
+                    <select name="mqtt_format">
+                        <option value="value" %mqtt_format:value?selected%>Value only</option>
+                        <option value="value_unit" %mqtt_format:value_unit?selected%>Value + unit (Hz)</option>
+                        <option value="json" %mqtt_format:json?selected%>Full JSON</option>
                     </select>
                 </label>
             </div>
