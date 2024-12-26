@@ -81,7 +81,6 @@ To flash the board:
 * Upload the program plus its web server files:
 ```
 pio run -t upload
-pio run -t uploadfs
 ```
 
 ### Running

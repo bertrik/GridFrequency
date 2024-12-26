@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <ESPmDNS.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 
 #include <WiFiManager.h>
 #include <PubSubClient.h>
@@ -10,6 +10,7 @@
 
 #include "measure.h"
 #include "config.h"
+#include "fsimage.h"
 
 #define printf Serial.printf
 
@@ -91,14 +92,12 @@ void setup(void)
     uint32_t chipId = ESP.getEfuseMac() & 0xFFFFFFFFL;
     snprintf(esp_id, sizeof(esp_id), "esp32-%08X", chipId);
 
-    // connect to WiFi
-    WiFi.setHostname(HOST_NAME);
-    WiFiManager wm;
-    wm.autoConnect(HOST_NAME);
+    // unpack local files
+    LittleFS.begin(true);
+    fsimage_unpack(LittleFS, false);
 
     // load settings, save defaults if necessary
-    SPIFFS.begin();
-    config_begin(SPIFFS, "/config.json");
+    config_begin(LittleFS, "/config.json");
     if (!config_load()) {
         config_set_value("mqtt_broker_host", "");
         config_set_value("mqtt_broker_port", "1883");
@@ -110,12 +109,17 @@ void setup(void)
         config_save();
     }
 
+    // connect to WiFi
+    WiFi.setHostname(HOST_NAME);
+    WiFiManager wm;
+    wm.autoConnect(HOST_NAME);
+
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     events.onConnect(on_event_connect);
     server.addHandler(&events);
 
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
     config_serve(server, "/config", "/config.html");
     server.begin();
 
