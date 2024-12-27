@@ -17,6 +17,9 @@ static int sample_index;
 static double sum_i = 0.0;
 static double sum_q = 0.0;
 
+static double *sine_table;
+static size_t sine_table_len;
+
 static hw_timer_t *timer = nullptr;
 
 static void IRAM_ATTR adc_int(void)
@@ -29,6 +32,17 @@ static void IRAM_ATTR adc_int(void)
     }
 }
 
+static double sine(int index)
+{
+    index = index % sine_table_len;
+    return sine_table[index];
+}
+
+static double cosine(int index)
+{
+    return sine(index + sine_table_len / 4);
+}
+
 void measure_init(int pin, double base_frequency)
 {
     _pin = pin;
@@ -37,6 +51,13 @@ void measure_init(int pin, double base_frequency)
     bufr = 0;
     bufw = 0;
     sample_index = 0;
+
+    // pre-calculate sine table
+    sine_table_len = SAMPLE_FREQUENCY / _base_frequency;
+    sine_table = new double[sine_table_len];
+    for (int i = 0; i < sine_table_len; i++) {
+        sine_table[i] = sin(2.0 * M_PI * i / sine_table_len);
+    }
 
     analogReadResolution(12);
     analogSetAttenuation(ADC_0db);
@@ -77,8 +98,8 @@ bool measure_loop(double &angle, double &ampl)
 {
     uint16_t value;
     while (measure_get(value)) {
-        sum_i += value * cos(2.0 * M_PI * _base_frequency * sample_index / SAMPLE_FREQUENCY);
-        sum_q += value * sin(2.0 * M_PI * _base_frequency * sample_index / SAMPLE_FREQUENCY);
+        sum_i += value * cosine(sample_index);
+        sum_q += value * sine(sample_index);
         sample_index++;
         if (sample_index == SAMPLE_FREQUENCY) {
             angle = 180.0 * atan2(sum_i, sum_q) / M_PI;
