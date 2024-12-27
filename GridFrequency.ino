@@ -52,6 +52,18 @@ static void show_help(const cmd_t *cmds)
 
 static int do_help(int argc, char *argv[]);
 
+static int do_start(int argc, char *argv[])
+{
+    measure_start();
+    return 0;
+}
+
+static int do_stop(int argc, char *argv[])
+{
+    measure_stop();
+    return 0;
+}
+
 static int do_reboot(int argc, char *argv[])
 {
     ESP.restart();
@@ -59,6 +71,8 @@ static int do_reboot(int argc, char *argv[])
 }
 
 const cmd_t commands[] = {
+    { "start", do_start, "Start sample process"},
+    { "stop", do_stop, "Stop sample process"},
     { "reboot", do_reboot, "Reboot" },
     { "help", do_help, "Show help" },
     { NULL, NULL, NULL }

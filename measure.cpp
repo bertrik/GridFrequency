@@ -31,26 +31,34 @@ static void IRAM_ATTR adc_int(void)
 
 void measure_init(int pin, double base_frequency)
 {
-    analogReadResolution(12);
-    analogSetAttenuation(ADC_0db);
-    analogSetPinAttenuation(pin, ADC_0db);
-    adcAttachPin(pin);
-
-    timer = timerBegin(0, 80, true);
+    _pin = pin;
+    _base_frequency = base_frequency;
 
     bufr = 0;
     bufw = 0;
     sample_index = 0;
-    
-    _pin = pin;
-    _base_frequency = base_frequency;
+
+    analogReadResolution(12);
+    analogSetAttenuation(ADC_0db);
+    analogSetPinAttenuation(pin, ADC_0db);
+    adcAttachPin(pin);
 }
 
 void measure_start(void)
 {
+    timer = timerBegin(0, 80, true);
     timerAttachInterrupt(timer, &adc_int, true);
     timerAlarmWrite(timer, 1000000 / SAMPLE_FREQUENCY, true);   // 5kHz timer
     timerAlarmEnable(timer);
+}
+
+void measure_stop(void)
+{
+    if (timerAlarmEnabled(timer)) {
+        timerAlarmDisable(timer);
+        timerDetachInterrupt(timer);
+        timerEnd(timer);
+    }
 }
 
 static bool measure_get(uint16_t &val)
