@@ -11,6 +11,7 @@
 #include "measure.h"
 #include "config.h"
 #include "fsimage.h"
+#include "fwversion.h"
 
 #define printf Serial.printf
 
@@ -70,10 +71,17 @@ static int do_reboot(int argc, char *argv[])
     return 0;
 }
 
+static int do_version(int argc, char *argv[])
+{
+    printf("Version: '%s'\n", FW_VERSION);
+    return 0;
+}
+
 const cmd_t commands[] = {
     { "start", do_start, "Start sample process"},
     { "stop", do_stop, "Stop sample process"},
     { "reboot", do_reboot, "Reboot" },
+    { "version", do_version, "Show version number" },
     { "help", do_help, "Show help" },
     { NULL, NULL, NULL }
 };
