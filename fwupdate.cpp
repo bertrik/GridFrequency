@@ -3,8 +3,7 @@
 #include <stdint.h>
 
 #include <Arduino.h>
-//#include <HttpsOTAUpdate.h>
-#include <Update.h>
+#include <HTTPUpdate.h>
 
 #include "fwupdate.h"
 #include "fwversion.h"
@@ -14,7 +13,8 @@
 #endif
 
 static FS *_fs;
-// static WiFiClientSecure wifiClientSecure;
+static WiFiClientSecure wifiClientSecure;
+
 static String _update_path;
 static String _update_page;
 static String _url = "";
@@ -28,13 +28,11 @@ void fwupdate_begin(FS & fs)
 {
     _fs = &fs;
 
-    // wifiClientSecure.setInsecure();
+    wifiClientSecure.setInsecure();
 
-    // ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-    // ESPhttpUpdate.setLedPin(LED_BUILTIN, 0);
-    // ESPhttpUpdate.rebootOnUpdate(true);
-
-    // Update.runAsync(true);
+    httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    httpUpdate.setLedPin(LED_BUILTIN, 0);
+    httpUpdate.rebootOnUpdate(true);
 }
 
 static String template_processor(const String & string)
@@ -112,25 +110,20 @@ void fwupdate_serve(AsyncWebServer &server, const char *update_path, const char 
 void fwupdate_loop(void)
 {
     if (_url != "") {
-        // HttpsOTA.begin(_url.c_str(), "");
-
-
-        // HttpsOTA.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-        // ESPhttpUpdate.setLedPin(LED_BUILTIN, 0);
-        // ESPhttpUpdate.rebootOnUpdate(true);
-        // switch (ESPhttpUpdate.update(wifiClientSecure, _url)) {
-        // case HTTP_UPDATE_FAILED:
-        //     printf("failed!\n");
-        //     break;
-        // case HTTP_UPDATE_NO_UPDATES:
-        //     printf("no update!\n");
-        //     break;
-        // case HTTP_UPDATE_OK:
-        //     printf("OK!\n");
-        //     break;
-        // default:
-        //     break;
-        // }
+        HTTPUpdateResult result = httpUpdate.update(wifiClientSecure, _url);
+        switch (result) {
+        case HTTP_UPDATE_FAILED:
+            printf("failed!\n");
+            break;
+        case HTTP_UPDATE_NO_UPDATES:
+            printf("no update!\n");
+            break;
+        case HTTP_UPDATE_OK:
+            printf("OK!\n");
+            break;
+        default:
+            break;
+        }
         _url = "";
     }
 }
