@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Update</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link rel="stylesheet" href="classless.css">
+</head>
+
+<body>
+    <p style="text-align:left"><a href="/"">/home</a></p>
+    <p><b>Current version: %fw_version%</b></p>
+    <form action="/update" method="post" hidden="true">
+        <fieldset>
+            <legend >Firmware update over HTTP</legend>
+            <div class="" row">
+                <label class="col">Remote URL:
+                    <input type="url" id="url" name="url"
+                        value="https://github.com/bertrik/GridFrequency/releases/latest/download/firmware.bin" required>
+                </label>
+            </div>
+            <div class="row">
+                <button type="submit" id="http" name="type" value="http">Update</button>
+            </div>
+        </fieldset>
+    </form>
+    <form action="/update" method="post" enctype="multipart/form-data">
+        <fieldset>
+            <legend>Firmware update from local file</legend>
+            <div class="row">
+                <label class="col">Local file:
+                    <input type="file" id="file" name="file" accept=".bin" required>
+                </label>
+            </div>
+            <div class="row">
+                <button type="submit" id="update" name="type" value="file">Update</button>
+                <button type="button" id="reboot" onclick="fetch('/reboot')">Reboot</button>
+            </div>
+        </fieldset>
+    </form>
+</body>
+
+<script type="module">
+    // disable submit button on POST, it will be re-enabled on the reload
+    document.getElementById("update").addEventListener("submit", function (e) {
+        document.getElementById("update").disabled = true
+    })
+</script>
+
+
+</html>

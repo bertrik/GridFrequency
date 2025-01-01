@@ -11,7 +11,7 @@
 #include "measure.h"
 #include "config.h"
 #include "fsimage.h"
-#include "fwversion.h"
+#include "fwupdate.h"
 
 #define printf Serial.printf
 
@@ -71,17 +71,10 @@ static int do_reboot(int argc, char *argv[])
     return 0;
 }
 
-static int do_version(int argc, char *argv[])
-{
-    printf("Version: '%s'\n", FW_VERSION);
-    return 0;
-}
-
 const cmd_t commands[] = {
     { "start", do_start, "Start sample process"},
     { "stop", do_stop, "Stop sample process"},
     { "reboot", do_reboot, "Reboot" },
-    { "version", do_version, "Show version number" },
     { "help", do_help, "Show help" },
     { NULL, NULL, NULL }
 };
@@ -117,6 +110,7 @@ void setup(void)
     // unpack local files
     LittleFS.begin(true);
     fsimage_unpack(LittleFS, false);
+    fwupdate_begin(LittleFS);
 
     // load settings, save defaults if necessary
     config_begin(LittleFS, "/config.json");
@@ -143,6 +137,7 @@ void setup(void)
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
     config_serve(server, "/config", "/config.html");
+    fwupdate_serve(server, "/update", "/update.html");
     server.begin();
 
     MDNS.begin(HOST_NAME);
@@ -226,4 +221,7 @@ void loop(void)
 
     // process mqtt events
     mqttClient.loop();
+
+    // firmware update
+    fwupdate_loop();
 }
