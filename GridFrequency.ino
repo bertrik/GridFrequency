@@ -2,7 +2,9 @@
 #include <ESPmDNS.h>
 #include <LittleFS.h>
 
-#include <WiFiManager.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
+
 #include <PubSubClient.h>
 #include <MiniShell.h>
 #include <AsyncEventSource.h>
@@ -27,6 +29,7 @@ static char esp_id[64];
 
 static AsyncWebServer server(80);
 static AsyncEventSource events("/events");
+static DNSServer dns;
 
 static MiniShell shell(&Serial);
 static WiFiClient wifiClient;
@@ -88,7 +91,7 @@ static int do_help(int argc, char *argv[])
 static void on_event_connect(AsyncEventSourceClient *client)
 {
     IPAddress remoteIP = client->client()->remoteIP();
-    printf("Client connected: %s\n", remoteIP.toString().c_str());
+    printf("SSE client connected: %s\n", remoteIP.toString().c_str());
 }
 
 void setup(void)
@@ -127,17 +130,17 @@ void setup(void)
 
     // connect to WiFi
     WiFi.setHostname(HOST_NAME);
-    WiFiManager wm;
-    wm.autoConnect(HOST_NAME);
+    AsyncWiFiManager wifiManager(&server, &dns);
+    wifiManager.autoConnect(HOST_NAME);
 
     // set up web server
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     events.onConnect(on_event_connect);
     server.addHandler(&events);
 
-    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
     config_serve(server, "/config", "/config.html");
     fwupdate_serve(server, "/update", "/update.html");
+    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
     server.begin();
 
     MDNS.begin(HOST_NAME);
