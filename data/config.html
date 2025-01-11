@@ -8,56 +8,66 @@
 </head>
 
 <body>
+    <p style="text-align:left"><a href="/">/home</a></p>
     <form action="/config" method="post" id="config">
         <fieldset>
             <legend>MQTT settings</legend>
             <div class="row">
                 <label class="col">Broker host (leave empty to disable)
-                    <input type="text" name="mqtt_broker_host" value="%mqtt_broker_host%">
+                    <input type="text" name="mqtt_broker_host">
                 </label>
                 <label class="col-3">port
-                    <input type="number" name="mqtt_broker_port" min="0" value="%mqtt_broker_port%" required>
+                    <input type="number" name="mqtt_broker_port" min="0" required>
                 </label>
             </div>
             <div class="row">
                 <label class="col">Client user name
-                    <input type="text" name="mqtt_user" value="%mqtt_user%">
+                    <input type="text" name="mqtt_user">
                 </label>
                 <label class="col">password
-                    <input type="text" name="mqtt_pass" value="%mqtt_pass%">
+                    <input type="text" name="mqtt_pass">
                 </label>
             </div>
             <div class="row">
                 <label class="col">Topic
-                    <input type="text" name="mqtt_topic" value="%mqtt_topic%" required>
+                    <input type="text" name="mqtt_topic" required>
                 </label>
                 <label class="col-4">Payload format
                     <select name="mqtt_format">
-                        <option value="value" %mqtt_format:value?selected%>Value only</option>
-                        <option value="value_unit" %mqtt_format:value_unit?selected%>Value + unit (Hz)</option>
-                        <option value="json" %mqtt_format:json?selected%>Full JSON</option>
+                        <option value="value">Value only</option>
+                        <option value="value_unit">Value + unit (Hz)</option>
+                        <option value="json">Full JSON</option>
                     </select>
                 </label>
             </div>
             <div class="row">
                 <label class="col-4">Options
                     <select name="mqtt_retained">
-                        <option value="true" %mqtt_retained:true?selected%>Retained</option>
-                        <option value="false" %mqtt_retained:false?selected%>Non-retained</option>
+                        <option value="true">Retained</option>
+                        <option value="false">Non-retained</option>
                     </select>
                 </label>
             </div>
         </fieldset>
         <button type="submit" id="submit">Save</button>
     </form>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            // pre-fill input fields from config
+            const config = await fetch('/config.json').then(response => response.json());
+            Object.entries(config).forEach(([name, value]) => {
+                const element = document.querySelector("[name='" + name + "']");
+                if (element) {
+                    element.value = value;
+                }
+            })
+        });
+
+        // disable submit button on POST, it will be re-enabled on the reload
+        document.getElementById("config").addEventListener("submit", function (e) {
+            document.getElementById("submit").disabled = true
+        });
+    </script>
 </body>
-
-<script type="module">
-    // disable submit button on POST, it will be re-enabled on the reload
-    document.getElementById("config").addEventListener("submit", function (e) {
-        document.getElementById("submit").disabled = true
-    })
-</script>
-
 
 </html>

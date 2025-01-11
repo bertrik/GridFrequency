@@ -10,35 +10,13 @@ static String _config_path;
 static String _config_page;
 static int _version = 0;
 
-static String template_processor(const String & string)
-{
-    // replace according to pattern "propName:propValue?replacement"
-    int i = string.indexOf("?");
-    if (i >= 0) {
-        String property = string.substring(0, i);
-        String replacement = string.substring(i + 1);
-        i = property.indexOf(":");
-        if (i >= 0) {
-            // split property in name and matching value
-            String propName = property.substring(0, i);
-            String propValue = property.substring(i + 1);
-            String actual = _jsonDoc[propName] | "";
-            if (actual == propValue) {
-                return replacement;
-            }
-        }
-    }
-    // try regular match
-    return _jsonDoc[string] | "";
-}
-
 static void handleGetConfig(AsyncWebServerRequest *request)
 {
     // read the config file in preparation of presentation in the web UI
     config_load();
 
     // serve the config page from flash
-    request->send(*_fs, _config_page, "text/html", false, template_processor);
+    request->send(*_fs, _config_page, "text/html", false);
 }
 
 static void handlePostConfig(AsyncWebServerRequest *request)
