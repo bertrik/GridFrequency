@@ -23,7 +23,7 @@ static void handlePostConfig(AsyncWebServerRequest *request)
 {
     // put all parameters in the JSON document
     for (size_t i = 0; i < request->params(); i++) {
-        AsyncWebParameter *param = request->getParam(i);
+        const AsyncWebParameter *param = request->getParam(i);
         String name = param->name();
         String value = param->value();
         _jsonDoc[name] = value;
