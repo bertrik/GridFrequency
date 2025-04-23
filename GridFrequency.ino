@@ -10,6 +10,8 @@
 #include <AsyncEventSource.h>
 #include <ArduinoJson.h>
 
+#include <esp_sntp.h>
+
 #include "measure.h"
 #include "config.h"
 #include "fsimage.h"
@@ -146,6 +148,14 @@ void setup(void)
     MDNS.begin(HOST_NAME);
     MDNS.addService("_http", "_tcp", 80);
 
+    // NTP
+    sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
+    esp_sntp_setservername(0, "0.pool.ntp.org");
+    esp_sntp_setservername(1, "1.pool.ntp.org");
+    esp_sntp_setservername(2, "2.pool.ntp.org");
+    esp_sntp_setservername(3, "3.pool.ntp.org");
+    esp_sntp_init();
+
     measure_init(PIN_50HZ_INPUT, BASE_FREQUENCY);
     measure_start();
 }
@@ -204,9 +214,13 @@ void loop(void)
 
         printf("Phase:%8.3f, Delta:%8.3f, Ampl:%6.1f, Freq:%7.3f\n", phase, delta, ampl, freq);
 
+        // get time
+        timeval tv { };
+        gettimeofday(&tv, nullptr);
+
         // send over SSE
-        char value[64];
-        sprintf(value, "{\"phase\":%.1f,\"amplitude\":%.1f,\"frequency\":%.3f}", phase, ampl, freq);
+        char value[128];
+        sprintf(value, "{\"phase\":%.1f,\"amplitude\":%.1f,\"frequency\":%.3f,\"timestamp\":%ld.%06ld}", phase, ampl, freq, tv.tv_sec, tv.tv_usec);
         events.send(value, NULL, event_id++);
 
         // send over MQTT
